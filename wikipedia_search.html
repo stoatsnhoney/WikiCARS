@@ -64,15 +64,16 @@
     }
 
     const list = document.createElement('ul');
+    list.style.listStyleType = 'none'; // Remove bullet points
     results.forEach(item => {
       const listItem = document.createElement('li');
       const link = document.createElement('a');
       link.href = 'javascript:void(0)';
       link.textContent = item.title;
       
-      // When clicked, fetch and display the article summary
+      // When clicked, fetch and display the entire article with image
       link.addEventListener('click', () => {
-        getArticleSummary(item.title);
+        getFullArticleWithImage(item.title);
       });
       listItem.appendChild(link);
       list.appendChild(listItem);
@@ -80,16 +81,15 @@
     resultsContainer.appendChild(list);
   }
 
-  // Fetch the summary (intro text) of the selected article
-  function getArticleSummary(title) {
+  // Fetch the full content of the selected article with an image
+  function getFullArticleWithImage(title) {
     const endpoint =
       'https://en.wikipedia.org/w/api.php' +
       '?action=query' +
-      '&prop=extracts' +
-      '&exintro' +
-      '&explaintext' +
+      '&prop=extracts|pageimages' +
       '&format=json' +
       '&origin=*' +
+      '&piprop=original' +
       '&titles=' + encodeURIComponent(title);
 
     fetch(endpoint)
@@ -100,20 +100,23 @@
           const page = data.query.pages[pageId];
 
           if (page && page.extract) {
-            // Replace the search results with the article summary
+            const imageUrl = page.original ? page.original.source : '';
+
+            // Replace the search results with the full article content and image
             document.getElementById('wikiResults').innerHTML = `
               <h3>${page.title}</h3>
+              ${imageUrl ? `<img src="${imageUrl}" alt="${page.title}" style="max-width: 100%; height: auto;">` : ''}
               <p>${page.extract}</p>
               <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(page.title)}" target="_blank">Read more on Wikipedia</a></p>
             `;
           } else {
-            document.getElementById('wikiResults').innerHTML = '<p>Could not load article summary.</p>';
+            document.getElementById('wikiResults').innerHTML = '<p>Could not load article content.</p>';
           }
         }
       })
       .catch(err => {
-        console.error('Error fetching article summary:', err);
-        document.getElementById('wikiResults').innerHTML = '<p>Error fetching article summary.</p>';
+        console.error('Error fetching article content:', err);
+        document.getElementById('wikiResults').innerHTML = '<p>Error fetching article content.</p>';
       });
   }
 </script>
