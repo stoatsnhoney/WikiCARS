@@ -1,6 +1,6 @@
 <!-- BEGIN WIKIPEDIA SEARCH MODULE -->
 <div id="wikiSearchModule">
-  <h2>Wikipedia Search</h2>
+  <h2>Wikipedia Data Retrieval</h2>
   <input
     type="text"
     id="wikiSearchInput"
@@ -102,11 +102,14 @@
           if (page && page.extract) {
             const imageUrl = page.original ? page.original.source : '';
 
+            // Use a regular expression to remove only the "References" section
+            const cleanedExtract = page.extract.replace(/<h2[^>]*>(References|See Also)<\/h2>.*?(?=<h2|$)/gis, '');
+
             // Replace the search results with the full article content and image
             document.getElementById('wikiResults').innerHTML = `
               <h3>${page.title}</h3>
               ${imageUrl ? `<img src="${imageUrl}" alt="${page.title}" style="max-width: 100%; height: auto;">` : ''}
-              <p>${page.extract}</p>
+              <p>${cleanedExtract}</p>
               <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(page.title)}" target="_blank">Read more on Wikipedia</a></p>
             `;
           } else {
