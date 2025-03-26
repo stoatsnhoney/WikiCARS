@@ -1,120 +1,120 @@
 <!-- BEGIN WIKIPEDIA SEARCH MODULE -->
 <div id="wikiSearchModule">
-    <h2>Wikipedia Search</h2>
-    <input
-      type="text"
-      id="wikiSearchInput"
-      placeholder="Enter a search term..."
-      style="width: 250px;"
-    />
-    <button id="wikiSearchBtn">Search</button>
-    
-    <div id="wikiResults" style="margin-top: 1em;"></div>
-  </div>
+  <h2>Wikipedia Search</h2>
+  <input
+    type="text"
+    id="wikiSearchInput"
+    placeholder="Enter a search term..."
+    style="width: 250px;"
+  />
+  <button id="wikiSearchBtn">Search</button>
   
-  <script>
-    // When the user clicks the Search button:
-    document.getElementById('wikiSearchBtn').addEventListener('click', function() {
-      const searchTerm = document.getElementById('wikiSearchInput').value.trim();
-      if (searchTerm) {
-        searchWikipedia(searchTerm);
-      }
-    });
-    
-    // You can also allow pressing Enter in the input box:
-    document.getElementById('wikiSearchInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        document.getElementById('wikiSearchBtn').click();
-      }
-    });
-  
-    // Fetch a list of search results from the Wikipedia API
-    function searchWikipedia(searchTerm) {
-      const endpoint =
-        'https://en.wikipedia.org/w/api.php' +
-        '?action=query' +
-        '&list=search' +
-        '&format=json' +
-        '&origin=*' +
-        '&srsearch=' + encodeURIComponent(searchTerm);
-  
-      fetch(endpoint)
-        .then(response => response.json())
-        .then(data => {
-          if (data.query && data.query.search) {
-            displaySearchResults(data.query.search);
-          } else {
-            document.getElementById('wikiResults').innerHTML = '<p>No results found.</p>';
-          }
-        })
-        .catch(err => {
-          console.error('Error fetching search results:', err);
-          document.getElementById('wikiResults').innerHTML = '<p>Error fetching results.</p>';
-        });
+  <div id="wikiResults" style="margin-top: 1em;"></div>
+</div>
+
+<script>
+  // When the user clicks the Search button:
+  document.getElementById('wikiSearchBtn').addEventListener('click', function() {
+    const searchTerm = document.getElementById('wikiSearchInput').value.trim();
+    if (searchTerm) {
+      searchWikipedia(searchTerm);
     }
+  });
   
-    // Show the list of search results
-    function displaySearchResults(results) {
-      const resultsContainer = document.getElementById('wikiResults');
-      resultsContainer.innerHTML = ''; // Clear previous content
-  
-      if (results.length === 0) {
-        resultsContainer.innerHTML = '<p>No results found.</p>';
-        return;
-      }
-  
-      const list = document.createElement('ul');
-      results.forEach(item => {
-        const listItem = document.createElement('li');
-        const link = document.createElement('a');
-        link.href = 'javascript:void(0)';
-        link.textContent = item.title;
-        
-        // When clicked, fetch and display the article summary
-        link.addEventListener('click', () => {
-          getArticleSummary(item.title);
-        });
-        listItem.appendChild(link);
-        list.appendChild(listItem);
+  // You can also allow pressing Enter in the input box:
+  document.getElementById('wikiSearchInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+      document.getElementById('wikiSearchBtn').click();
+    }
+  });
+
+  // Fetch a list of search results from the Wikipedia API
+  function searchWikipedia(searchTerm) {
+    const endpoint =
+      'https://en.wikipedia.org/w/api.php' +
+      '?action=query' +
+      '&list=search' +
+      '&format=json' +
+      '&origin=*' +
+      '&srsearch=' + encodeURIComponent(searchTerm);
+
+    fetch(endpoint)
+      .then(response => response.json())
+      .then(data => {
+        if (data.query && data.query.search) {
+          displaySearchResults(data.query.search);
+        } else {
+          document.getElementById('wikiResults').innerHTML = '<p>No results found.</p>';
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching search results:', err);
+        document.getElementById('wikiResults').innerHTML = '<p>Error fetching results.</p>';
       });
-      resultsContainer.appendChild(list);
+  }
+
+  // Show the list of search results
+  function displaySearchResults(results) {
+    const resultsContainer = document.getElementById('wikiResults');
+    resultsContainer.innerHTML = ''; // Clear previous content
+
+    if (results.length === 0) {
+      resultsContainer.innerHTML = '<p>No results found.</p>';
+      return;
     }
-  
-    // Fetch the summary (intro text) of the selected article
-    function getArticleSummary(title) {
-      const endpoint =
-        'https://en.wikipedia.org/w/api.php' +
-        '?action=query' +
-        '&prop=extracts' +
-        '&exintro' +
-        '&explaintext' +
-        '&format=json' +
-        '&origin=*' +
-        '&titles=' + encodeURIComponent(title);
-  
-      fetch(endpoint)
-        .then(response => response.json())
-        .then(data => {
-          if (data.query && data.query.pages) {
-            const pageId = Object.keys(data.query.pages)[0];
-            const page = data.query.pages[pageId];
-  
-            if (page && page.extract) {
-              // Replace the search results with the article summary
-              document.getElementById('wikiResults').innerHTML = `
-                <h3>${page.title}</h3>
-                <p>${page.extract}</p>
-                <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(page.title)}" target="_blank">Read more on Wikipedia</a></p>
-              `;
-            } else {
-              document.getElementById('wikiResults').innerHTML = '<p>Could not load article summary.</p>';
-            }
+
+    const list = document.createElement('ul');
+    results.forEach(item => {
+      const listItem = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = 'javascript:void(0)';
+      link.textContent = item.title;
+      
+      // When clicked, fetch and display the article summary
+      link.addEventListener('click', () => {
+        getArticleSummary(item.title);
+      });
+      listItem.appendChild(link);
+      list.appendChild(listItem);
+    });
+    resultsContainer.appendChild(list);
+  }
+
+  // Fetch the summary (intro text) of the selected article
+  function getArticleSummary(title) {
+    const endpoint =
+      'https://en.wikipedia.org/w/api.php' +
+      '?action=query' +
+      '&prop=extracts' +
+      '&exintro' +
+      '&explaintext' +
+      '&format=json' +
+      '&origin=*' +
+      '&titles=' + encodeURIComponent(title);
+
+    fetch(endpoint)
+      .then(response => response.json())
+      .then(data => {
+        if (data.query && data.query.pages) {
+          const pageId = Object.keys(data.query.pages)[0];
+          const page = data.query.pages[pageId];
+
+          if (page && page.extract) {
+            // Replace the search results with the article summary
+            document.getElementById('wikiResults').innerHTML = `
+              <h3>${page.title}</h3>
+              <p>${page.extract}</p>
+              <p><a href="https://en.wikipedia.org/wiki/${encodeURIComponent(page.title)}" target="_blank">Read more on Wikipedia</a></p>
+            `;
+          } else {
+            document.getElementById('wikiResults').innerHTML = '<p>Could not load article summary.</p>';
           }
-        })
-        .catch(err => {
-          console.error('Error fetching article summary:', err);
-          document.getElementById('wikiResults').innerHTML = '<p>Error fetching article summary.</p>';
-        });
-    }
-  </script>
-  <!-- END WIKIPEDIA SEARCH MODULE -->
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching article summary:', err);
+        document.getElementById('wikiResults').innerHTML = '<p>Error fetching article summary.</p>';
+      });
+  }
+</script>
+<!-- END WIKIPEDIA SEARCH MODULE -->
