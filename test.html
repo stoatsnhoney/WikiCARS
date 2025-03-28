@@ -1,0 +1,122 @@
+<body>
+  <div id="search-module">
+    <h1>Wikipedia Search</h1>
+    <div>
+      <input type="text" id="searchInput" placeholder="Search Wikipedia..." />
+      <button id="searchButton">Search</button>
+    </div>
+
+    <!-- Shows search results; replaced by article on click -->
+    <ul id="searchResults"></ul>
+
+    <!-- Shows the Wikipedia article HTML -->
+    <div id="articleContent"></div>
+  </div>
+
+  <script>
+    (function() {
+      const searchInput = document.getElementById("searchInput");
+      const searchButton = document.getElementById("searchButton");
+      const searchResults = document.getElementById("searchResults");
+      const articleContent = document.getElementById("articleContent");
+
+      /**
+       * Search Wikipedia via "list=search" for the provided query string.
+       */
+      async function searchWikipedia(query) {
+        if (!query) return [];
+        const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&srsearch=${encodeURIComponent(query)}&origin=*`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          return data?.query?.search || [];
+        } catch (error) {
+          console.error("Error fetching search results:", error);
+          return [];
+        }
+      }
+
+      /**
+       * Retrieve the article as HTML using "action=parse" for the given title.
+       */
+      async function getWikipediaArticleHTML(title) {
+        const url = `https://en.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(title)}&prop=text&format=json&origin=*`;
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          // The HTML is inside data.parse.text["*"]
+          return data?.parse?.text["*"] || "<p>No content found.</p>";
+        } catch (error) {
+          console.error("Error fetching article:", error);
+          return "<p>Error loading article.</p>";
+        }
+      }
+
+      /**
+       * Load the article for the given title and display it, removing search results.
+       */
+      async function handleResultClick(title) {
+        searchResults.innerHTML = ""; // Remove search results
+        articleContent.innerHTML = "<p>Loading...</p>"; // Temporary message
+
+        // Load article HTML
+        const articleHTML = await getWikipediaArticleHTML(title);
+        articleContent.innerHTML = articleHTML;
+
+        // Remove Wikipedia "[edit]" links -- spans with class "mw-editsection"
+        const editSpans = articleContent.querySelectorAll(".mw-editsection");
+        editSpans.forEach(span => span.remove());
+
+        // Intercept links within the article
+        interceptWikiLinks();
+      }
+
+      /**
+       * Intercepts links in the article, so:
+       *   - Internal Wikipedia links (/wiki/...) are loaded in-module
+       *   - External links open normally, but without forcing a new tab
+       */
+      function interceptWikiLinks() {
+        const links = articleContent.querySelectorAll("a");
+        links.forEach(link => {
+          // Remove any 'target' so links won't automatically open new tabs
+          link.removeAttribute("target");
+
+          const href = link.getAttribute("href") || "";
+          // If it starts with "/wiki/", it's an internal Wikipedia link
+          if (href.startsWith("/wiki/")) {
+            link.addEventListener("click", async event => {
+              event.preventDefault();
+              // Extract the page title from the link
+              const pageTitle = decodeURIComponent(href.replace("/wiki/", ""));
+              // Load that page in this module
+              await handleResultClick(pageTitle);
+            });
+          }
+        });
+      }
+
+      /**
+       * When the user searches, list the results as <li> elements.
+       */
+      searchButton.addEventListener("click", async () => {
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        // Clear old results & article
+        searchResults.innerHTML = "";
+        articleContent.innerHTML = "";
+
+        const results = await searchWikipedia(query);
+
+        results.forEach(item => {
+          const li = document.createElement("li");
+          li.textContent = item.title;
+          // Clicking on a result loads that article HTML
+          li.addEventListener("click", () => handleResultClick(item.title));
+          searchResults.appendChild(li);
+        });
+      });
+    })();
+  </script>
+</body>
