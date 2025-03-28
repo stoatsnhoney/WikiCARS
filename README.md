@@ -1,4 +1,4 @@
-# WikiCARS
+# WikiLCARS
  
 For those of us who grew up watching Star Trek, things like the internet and Wikipedia have brought us so much closer to experiencing the future. Wikipedia itself perfectly exmplifies what Star Trek stands for: freedom of information, exploration, and learning.
 
